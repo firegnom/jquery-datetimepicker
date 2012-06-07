@@ -6,6 +6,16 @@ function zeroFill(number, width) {
 	return number + ""; // always return a string
 }
 
+
+function setHours(h){
+		hour(h);
+		jQuery('#' + _id + " #hour-slider").slider('value', h)
+}
+function setMinutes(h){
+		min(h);
+		jQuery('#' + _id + " #min-slider").slider('value', h)
+}
+
 function hour(i) {
 	if (i == null)
 		return jQuery('#' + _id + " #hour").val();
@@ -38,6 +48,10 @@ function min(i) {
 var _id;
 //Selector to find button pane
 var _buttonPane;
+
+var options = {
+	use_datejs : true
+}
 
 function _setId(id) {
 	_id = id;
@@ -113,25 +127,18 @@ function init_sliders(id, input) {
 	});
 	//join time input fields to sliders
 	$('#hour').focusout(function () {
-		hour(hour());
-		jQuery('#' + id + " #hour-slider").slider('value',hour())
-		
+		setHours(hour());
 	})
 	$('#min').focusout(function () {
-		min(min());
-		jQuery('#' + id + " #min-slider").slider('value',min())
+		setMinutes(min());
 	})
 	// double click increase by one both time and hour
 	$('#min').dblclick(function () {
-		min(parseInt(min())+1)
-		jQuery('#' + id + " #min-slider").slider('value',min())
+		setMinutes(parseInt(min()) + 1);
 	})
 	$('#hour').dblclick(function () {
-		hour(parseInt(hour())+1);
-		jQuery('#' + id + " #hour-slider").slider('value',hour())
-		
+		setHours(parseInt(hour()) + 1);
 	})
-	
 	
 	var dialog = jQuery('#' + id).dialog({
 			dialogClass : 'notitle',
@@ -147,9 +154,27 @@ function init_sliders(id, input) {
 			autoOpen : false
 		});
 	
-	jQuery(_buttonPane)
-	.append(
-		'<span class="ui-custom-datetimepicker-datejs-input"><input class="ui-state-default ui-widget ui-widget-content ui-corner-left" ><a title="Show All Items" class="ui-button ui-widget ui-state-default ui-button-icon-only ui-corner-right ui-button-icon" role="button" aria-disabled="false"><span class="ui-button-icon-primary ui-icon ui-icon ui-icon-refresh"></span><span class="ui-button-text"></span></a></span>')
+	if (options.use_datejs) {
+		var bp = jQuery(_buttonPane)
+			bp.append(
+				'<span class="ui-custom-datetimepicker-datejs-input"><input class="ui-state-default ui-widget ui-widget-content ui-corner-left" ><a title="Show All Items" class="ui-button ui-widget ui-state-default ui-button-icon-only ui-corner-right ui-button-icon"><span class="ui-button-icon-primary ui-icon ui-icon ui-icon-refresh"></span><span class="ui-button-text"></span></a></span>')
+			bp.find('.ui-button').mouseenter(function () {
+				$(this).removeClass('ui-state-default');
+				$(this).addClass('ui-state-hover');
+			}).mouseleave(function () {
+				$(this).removeClass('ui-state-hover');
+				$(this).addClass('ui-state-default');
+			}).click(function () {
+				_parseDateJs(bp)
+			})
+			
+			bp.find('input').keypress(function (e) {
+				if (e.which == 13) {
+					_parseDateJs(bp)
+				}
+			});
+			
+	}
 	
 	dialog.parent().mouseenter(function () {
 		_mouseover.dialog = true;
@@ -176,4 +201,17 @@ function init_sliders(id, input) {
 		});
 	});
 	
+}
+function _parseDateJs(bp){
+	console.log(bp.find('in'))
+	var date = Date.parse(bp.find('.ui-custom-datetimepicker-datejs-input input').val());
+	//TODO validate date
+	_setDate(date);
+	setHours(date.getHours())
+	setMinutes(date.getMinutes())
+}
+
+function _setDate(date){
+	
+	$('#'+_id+' .datepicker').datepicker('setDate',date);
 }
