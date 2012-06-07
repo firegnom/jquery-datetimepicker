@@ -1,0 +1,57 @@
+div#datetimepicker.ui-custom-datetimepicker {
+	overflow: hidden;
+	padding: 0;
+	margin:0;
+}
+
+div#datetimepicker.ui-custom-datetimepicker  .datepicker{
+	float:left;
+}
+
+div#datetimepicker.ui-custom-datetimepicker  .timepicker{
+	float:left;
+	height: 100%
+}
+
+div#datetimepicker.ui-custom-datetimepicker  .ui-custom-datetimepicker-header{
+	text-align: center;
+	line-height: 1.8em;
+}
+
+div#datetimepicker.ui-custom-datetimepicker  #hour , div#datetimepicker.ui-custom-datetimepicker  #min{
+	width: 18px;
+}
+
+div#datetimepicker.ui-custom-datetimepicker  .sliders-panel{
+	height: 148px;
+}
+
+div#datetimepicker.ui-custom-datetimepicker  .sliders-panel>div{
+	float:left;
+}
+
+div#datetimepicker.ui-custom-datetimepicker  #hour-slider,div#datetimepicker.ui-custom-datetimepicker  #min-slider{
+	height:125px; margin:1em;
+}
+
+
+
+.notitle .ui-dialog-titlebar {
+	display:none;
+}
+.ui-custom-datetimepicker-hour-pane{
+	display: block;
+	width:80px;
+}
+.ui-custom-datetimepicker-refresh-icon{
+	display:inline;
+	padding:0.5em;
+	margin: 0.5em 0.4em 0 0;
+	position: absolute;
+	width: 1.4em;
+	cursor: pointer;
+}
+.ui-custom-datetimepicker-datejs-input{
+	padding:0.5em;
+	margin: 0.5em 0 0.5em 0;
+}
