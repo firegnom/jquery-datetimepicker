@@ -38,9 +38,13 @@ function DateTimePicker(item, options) {
 					$n = $(n)
 						$n.data('datetimepicker', new DateTimePicker($n, type))
 				} else if (typeof(type) == "string") {
-					//TODO function execution
-					//settings = $.extend(defaults,options);
-					console.log('222')
+					switch (type) {
+					case 'getDate':
+						var a =$n.data('datetimepicker').getDate();
+						console.log(a)
+						return a;
+						break;
+					}
 				}
 			});
 		return $this
@@ -55,14 +59,27 @@ DateTimePicker.prototype._zeroFill = function (number, width) {
 	return number + ""; // always return a string
 }
 
+DateTimePicker.prototype._submit = function () {
+	this._dialog.dialog('close');
+	this._input.val(this.getDate());
+}
+
+DateTimePicker.prototype._openDialog = function () {
+	this._dialog.dialog('open');
+	this._dialog.parent().position({
+		my : 'left top',
+		at : 'left bottom',
+		of : $this._input
+	});
+}
+
 DateTimePicker.prototype._initDialog = function () {
 	$this = this
 		this._dialog.dialog({
 			dialogClass : 'notitle',
 			buttons : {
 				'Select' : function () {
-					alert('done');
-					$this._dialog.dialog('close')
+					$this._submit();
 				}
 			},
 			width : this._dialog.find('.datepicker').width() + this._dialog.find('.timepicker').width(),
@@ -107,13 +124,8 @@ DateTimePicker.prototype._initDialog = function () {
 	});
 	
 	this._input.click(function () {
-		$this=$(this).data('datetimepicker');
-		$this._dialog.dialog('open');
-		$this._dialog.parent().position({
-			my : 'left top',
-			at : 'left bottom',
-			of : $this._input
-		});
+		$this = $(this).data('datetimepicker');
+		$this._openDialog();
 	});
 	
 }
@@ -154,17 +166,20 @@ DateTimePicker.prototype._initSliders = function () {
 	//join time input fields to sliders
 	this._dialog.find('#hour').focusout(function () {
 		$this.setHours($this._hours());
+	}).focus(function () {
+		$(this).select()
+	}).dblclick(function () {
+		$this.setHours(parseInt($this._hours()) + 1);
 	})
 	this._dialog.find('#min').focusout(function () {
 		$this.setMinutes($this._min());
+	}).focus(function () {
+		$(this).select()
 	})
-	// double click increase by one both time and hour
-	this._dialog.find('#min').dblclick(function () {
+	.dblclick(function () {
 		$this.setMinutes(parseInt($this._min()) + 1);
-	})
-	this._dialog.find('#hour').dblclick(function () {
-		$this.setHours(parseInt($this._hours()) + 1);
-	})
+	});
+	
 }
 
 DateTimePicker.prototype._hours = function (i) {
@@ -226,4 +241,12 @@ DateTimePicker.prototype.setDateTime = function (date) {
 }
 DateTimePicker.prototype.setDate = function (date) {
 	this._dialog.find('.datepicker').datepicker('setDate', date);
+}
+
+DateTimePicker.prototype.getDate = function () {
+	date = this._dialog.find('.datepicker').datepicker('getDate');
+	
+	date.setHours(this._hours());
+	date.setMinutes(this._min());
+	return date;
 }
