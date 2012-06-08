@@ -1,4 +1,53 @@
-function zeroFill(number, width) {
+function log(i) {
+	$('#debug').append(i).append('<br/>')
+}
+
+function DateTimePicker(item, options) {
+	this.uuid = new Date().getTime()
+		this._input = item;
+	this.settings = $.extend(this._defaults, options);
+	
+	this._mouseover = {
+		dialog : false,
+		input : false
+	}
+	
+	//Create Date Time Picker html
+	this._dialog = this._create_datetimepicker();
+	
+	//set defaultvalues
+	this._hours(this.settings.hours);
+	this._min(this.settings.minutes);
+	
+	//initialize datepicker
+	//TODO pass options to datepicker
+	this._dialog.find('.datepicker').datepicker();
+	
+	this._initSliders();
+	
+	this._initDialog();
+	
+}
+
+(function ($) {
+	$.fn.datetimepicker = function (type, options) {
+		var settings;
+		$this = $(this)
+			$.each($this, function (i, n) {
+				if (type == null || typeof(type) == "object") {
+					$n = $(n)
+						$n.data('datetimepicker', new DateTimePicker($n, type))
+				} else if (typeof(type) == "string") {
+					//TODO function execution
+					//settings = $.extend(defaults,options);
+					console.log('222')
+				}
+			});
+		return $this
+	};
+})(jQuery);
+
+DateTimePicker.prototype._zeroFill = function (number, width) {
 	width -= number.toString().length;
 	if (width > 0) {
 		return new Array(width + (/\./.test(number) ? 2 : 1)).join('0') + number;
@@ -6,78 +55,149 @@ function zeroFill(number, width) {
 	return number + ""; // always return a string
 }
 
-
-function setHours(h){
-		hour(h);
-		jQuery('#' + _id + " #hour-slider").slider('value', h)
-}
-function setMinutes(h){
-		min(h);
-		jQuery('#' + _id + " #min-slider").slider('value', h)
-}
-
-function hour(i) {
-	if (i == null)
-		return jQuery('#' + _id + " #hour").val();
-	
-	var pi;
-	//try to parse input
-	pi = parseInt(i);
-	//TODO hardcoded value
-	if (isNaN(pi) || pi > 23 || pi < 0)
-		//TODO hardcoded value
-		pi = 12;
-	
-	jQuery('#' + _id + " #hour").val(zeroFill(pi, 2));
-	
-}
-function min(i) {
-	if (i == null)
-		return parseInt(jQuery('#' + _id + " #min").val());
-	var pi;
-	//try to parse input
-	pi = parseInt(i);
-	//TODO hardcoded value
-	if (isNaN(pi) || pi > 59 || pi < 0)
-		//TODO hardcoded value
-		pi = 0;
-	jQuery('#' + _id + " #min").val(zeroFill(pi, 2));
-}
-
-// id of element
-var _id;
-//Selector to find button pane
-var _buttonPane;
-
-var options = {
-	use_datejs : true
-}
-
-function _setId(id) {
-	_id = id;
-	_buttonPane = '#' + _id + '~.ui-dialog-buttonpane'
-}
-
-var _n;
-jQuery.fn.datetimepicker = function () {
-	$this = $(this)
-		jQuery.each($this, function (i, n) {
-			init_sliders('datetimepicker', n);
+DateTimePicker.prototype._initDialog = function () {
+	$this = this
+		this._dialog.dialog({
+			dialogClass : 'notitle',
+			buttons : {
+				'Select' : function () {
+					alert('done');
+					$this._dialog.dialog('close')
+				}
+			},
+			width : this._dialog.find('.datepicker').width() + this._dialog.find('.timepicker').width(),
+			resizable : false,
+			draggable : false,
+			autoOpen : false
 		});
-	return this
+	if (this.settings.use_datejs) {
+		this._button_pane = this._dialog.parent().find('.ui-dialog-buttonpane')
+			this._button_pane.append(
+				'<span class="ui-custom-datetimepicker-datejs-input"><input class="ui-state-default ui-widget ui-widget-content ui-corner-left" ><a title="Show All Items" class="ui-button ui-widget ui-state-default ui-button-icon-only ui-corner-right ui-button-icon"><span class="ui-button-icon-primary ui-icon ui-icon ui-icon-refresh"></span><span class="ui-button-text"></span></a></span>')
+			this._button_pane.find('a.ui-button').mouseenter(function () {
+				$(this).removeClass('ui-state-default');
+				$(this).addClass('ui-state-hover');
+			}).mouseleave(function () {
+				$(this).removeClass('ui-state-hover');
+				$(this).addClass('ui-state-default');
+			}).click(function () {
+				$this._parseDateJs()
+			})
+			this._button_pane.find('input').keypress(function (e) {
+				if (e.which == 13) {
+					$this._parseDateJs()
+				}
+			});
+	}
+	
+	this._dialog.parent().mouseenter(function () {
+		$this._mouseover.dialog = true;
+	}).mouseleave(function () {
+		$this._mouseover.dialog = false;
+	});
+	this._input.mouseenter(function () {
+		$(this).data('datetimepicker')._mouseover.input = true;
+	}).mouseleave(function () {
+		$(this).data('datetimepicker')._mouseover.input = false;
+	});
+	
+	jQuery(document).click(function () {
+		if (!$this._mouseover.dialog && !$this._mouseover.input)
+			$this._dialog.dialog('close');
+	});
+	
+	this._input.click(function () {
+		$this=$(this).data('datetimepicker');
+		$this._dialog.dialog('open');
+		$this._dialog.parent().position({
+			my : 'left top',
+			at : 'left bottom',
+			of : $this._input
+		});
+	});
+	
+}
+
+DateTimePicker.prototype.setHours = function (h) {
+	this._hours(h);
+	this._dialog.find("#hour-slider").slider('value', h)
+};
+DateTimePicker.prototype.setMinutes = function (h) {
+	this._min(h);
+	this._dialog.find("#min-slider").slider('value', h)
 };
 
-function log(i) {
-	$('#debug').append(i).append('<br/>')
+DateTimePicker.prototype._initSliders = function () {
+	$this = this;
+	
+	this._dialog.find("#hour-slider").slider({
+		orientation : "vertical",
+		range : "min",
+		min : this.settings._minhours,
+		max : this.settings._maxhours,
+		value : this._hours(),
+		slide : function (event, ui) {
+			$this._hours(ui.value)
+		}
+	});
+	this._dialog.find("#min-slider").slider({
+		orientation : "vertical",
+		range : "min",
+		min : this.settings._minminutes,
+		max : this.settings._maxminutes,
+		value : this._min(),
+		slide : function (event, ui) {
+			$this._min(ui.value)
+		}
+	});
+	
+	//join time input fields to sliders
+	this._dialog.find('#hour').focusout(function () {
+		$this.setHours($this._hours());
+	})
+	this._dialog.find('#min').focusout(function () {
+		$this.setMinutes($this._min());
+	})
+	// double click increase by one both time and hour
+	this._dialog.find('#min').dblclick(function () {
+		$this.setMinutes(parseInt($this._min()) + 1);
+	})
+	this._dialog.find('#hour').dblclick(function () {
+		$this.setHours(parseInt($this._hours()) + 1);
+	})
 }
 
-var _mouseover = {
-	dialog : false,
-	input : false
+DateTimePicker.prototype._hours = function (i) {
+	if (i == null)
+		return this._dialog.find("#hour").val();
+	var pi;
+	pi = parseInt(i);
+	if (isNaN(pi) || pi > this.settings._maxhours || pi < this.settings._minhours)
+		pi = this.settings.hours;
+	this._dialog.find("#hour").val(this._zeroFill(pi, 2));
+}
+DateTimePicker.prototype._min = function (i) {
+	if (i == null)
+		return parseInt(this._dialog.find("#min").val());
+	var pi;
+	pi = parseInt(i);
+	if (isNaN(pi) || pi > this.settings._maxminutes || pi < this.settings._minminutes)
+		pi = this.settings.minutes;
+	this._dialog.find("#min").val(this._zeroFill(pi, 2));
 }
 
-function _create_datetimepicker() {
-	var dp = $('<div/>').addClass('ui-custom-datetimepicker').attr('id', "datetimepicker");
+DateTimePicker.prototype._defaults = {
+	hours : 12,
+	minutes : 0,
+	use_datejs : true,
+	_maxminutes : 59,
+	_minminutes : 0,
+	_maxhours : 23,
+	_minhours : 0
+};
+
+DateTimePicker.prototype._create_datetimepicker = function () {
+	var dp = $('<div/>').addClass('ui-custom-datetimepicker datetimepicker-' + this.uuid).attr('id', "datetimepicker");
 	dp.append($('<div/>').addClass('datepicker'));
 	dp.append(
 		$('<div/>').addClass('timepicker').append(
@@ -90,128 +210,20 @@ function _create_datetimepicker() {
 					$('<div/>').append('<div id="hour-slider" />')).append(
 					$('<div/>').append('<div id="min-slider" />')))))
 	$('body').append(dp);
-	
 	return dp;
 }
 
-function init_sliders(id, input) {
-	_create_datetimepicker();
-	_setId(id);
-	
-	hour(12);
-	min(0);
-	
-	jQuery('#' + id + ' .datepicker').datepicker();
-	//jQuery('.custom-datetimepicker-hour-pane').height(jQuery('.datepicker .ui-datepicker').height())
-	
-	jQuery('#' + id + " #hour-slider").slider({
-		orientation : "vertical",
-		range : "min",
-		min : 0,
-		max : 23,
-		value : hour(),
-		slide : function (event, ui) {
-			hour(ui.value)
-		}
-	});
-	
-	jQuery('#' + id + " #min-slider").slider({
-		orientation : "vertical",
-		range : "min",
-		min : 0,
-		max : 59,
-		value : min(),
-		slide : function (event, ui) {
-			min(ui.value)
-		}
-	});
-	//join time input fields to sliders
-	$('#hour').focusout(function () {
-		setHours(hour());
-	})
-	$('#min').focusout(function () {
-		setMinutes(min());
-	})
-	// double click increase by one both time and hour
-	$('#min').dblclick(function () {
-		setMinutes(parseInt(min()) + 1);
-	})
-	$('#hour').dblclick(function () {
-		setHours(parseInt(hour()) + 1);
-	})
-	
-	var dialog = jQuery('#' + id).dialog({
-			dialogClass : 'notitle',
-			buttons : {
-				'Select' : function () {
-					alert('done');
-					jQuery(this).dialog('close')
-				}
-			},
-			width : jQuery('#' + id + ' .datepicker').width() + jQuery('#' + id + ' .timepicker').width(),
-			resizable : false,
-			draggable : false,
-			autoOpen : false
-		});
-	
-	if (options.use_datejs) {
-		var bp = jQuery(_buttonPane)
-			bp.append(
-				'<span class="ui-custom-datetimepicker-datejs-input"><input class="ui-state-default ui-widget ui-widget-content ui-corner-left" ><a title="Show All Items" class="ui-button ui-widget ui-state-default ui-button-icon-only ui-corner-right ui-button-icon"><span class="ui-button-icon-primary ui-icon ui-icon ui-icon-refresh"></span><span class="ui-button-text"></span></a></span>')
-			bp.find('.ui-button').mouseenter(function () {
-				$(this).removeClass('ui-state-default');
-				$(this).addClass('ui-state-hover');
-			}).mouseleave(function () {
-				$(this).removeClass('ui-state-hover');
-				$(this).addClass('ui-state-default');
-			}).click(function () {
-				_parseDateJs(bp)
-			})
-			
-			bp.find('input').keypress(function (e) {
-				if (e.which == 13) {
-					_parseDateJs(bp)
-				}
-			});
-			
-	}
-	
-	dialog.parent().mouseenter(function () {
-		_mouseover.dialog = true;
-	}).mouseleave(function () {
-		_mouseover.dialog = false;
-	});
-	$(input).mouseenter(function () {
-		_mouseover.input = true;
-	}).mouseleave(function () {
-		_mouseover.input = false;
-	});
-	
-	jQuery(document).click(function () {
-		if (!_mouseover.dialog && !_mouseover.input)
-			dialog.dialog('close');
-	});
-	
-	$(input).click(function () {
-		dialog.dialog('open');
-		dialog.parent().position({
-			my : 'left top',
-			at : 'left bottom',
-			of : $(input)
-		});
-	});
-	
-}
-function _parseDateJs(bp){
-	console.log(bp.find('in'))
-	var date = Date.parse(bp.find('.ui-custom-datetimepicker-datejs-input input').val());
+DateTimePicker.prototype._parseDateJs = function () {
+	var date = Date.parse(this._button_pane.find('.ui-custom-datetimepicker-datejs-input input').val());
 	//TODO validate date
-	_setDate(date);
-	setHours(date.getHours())
-	setMinutes(date.getMinutes())
+	this.setDateTime(date);
 }
 
-function _setDate(date){
-	
-	$('#'+_id+' .datepicker').datepicker('setDate',date);
+DateTimePicker.prototype.setDateTime = function (date) {
+	this.setDate(date);
+	this.setHours(date.getHours())
+	this.setMinutes(date.getMinutes())
+}
+DateTimePicker.prototype.setDate = function (date) {
+	this._dialog.find('.datepicker').datepicker('setDate', date);
 }
