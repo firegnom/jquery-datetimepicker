@@ -66,7 +66,6 @@
 					switch (type) {
 					case 'getDate':
 						var a = $n.data('datetimepicker').getDate();
-						console.log(a)
 						return a;
 						break;
 					}
@@ -259,7 +258,9 @@
 	DateTimePicker.prototype._parseDateJs = function () {
 		var date = Date.parse(this._button_pane.find('.ui-custom-datetimepicker-datejs-input input').val());
 		//TODO validate date
-		this.setDateTime(date);
+		if (date != null){
+			this.setDateTime(date);
+		}
 	}
 	
 	DateTimePicker.prototype.setDateTime = function (date) {
